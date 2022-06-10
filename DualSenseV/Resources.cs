@@ -1,16 +1,10 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Net;
+using System.Web.Script.Serialization;
 
 namespace DualSenseV
 {
     internal class Resources
     {
-        // can be ignored, not needed
     }
 
     public static class Triggers
@@ -19,12 +13,8 @@ namespace DualSenseV
 
         public static string PacketToJson(Packet packet)
         {
-            return Newtonsoft.Json.JsonConvert.SerializeObject(packet);
-        }
-
-        public static Packet JsonToPacket(string json)
-        {
-            return JsonConvert.DeserializeObject<Packet>(json);
+            var serializer = new JavaScriptSerializer();
+            return serializer.Serialize(packet);
         }
     }
 
