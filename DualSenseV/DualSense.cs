@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Reflection;
 using LemonUI;
 using LemonUI.Menus;
+using System.Linq;
 
 
 namespace DualSenseV
@@ -184,24 +185,33 @@ namespace DualSenseV
         bool controlLEDControle = false;
         bool controlLEDPadrao = true;
 
+        static int tickCounter = 0;
+
+        static Packet bk = null;
+
         //Veiculos
         bool controlVeiculos = true;
 
         static void Connect()
         {
             client = new UdpClient();
-            var portNumber = File.ReadAllText(@"C:\Temp\DualSenseX\DualSenseX_PortNumber.txt");
+            var portNumber = File.ReadAllText(@"C:\Program Files (x86)\Steam\steamapps\common\DSX\DualSenseX_PortNumber.txt");
             endPoint = new IPEndPoint(Triggers.localhost, Convert.ToInt32(portNumber));
         }
 
         static void Send(Packet data)
         {
+            bk = data;
+            tickCounter = 0;
+
             var RequestData = Encoding.ASCII.GetBytes(Triggers.PacketToJson(data));
             client.Send(RequestData, RequestData.Length, endPoint);
         }
 
         public DualSense()
         {
+            CosturaUtility.Initialize();
+
             Connect();
             LoadUI();
             this.Tick += OnTick;
@@ -443,6 +453,15 @@ namespace DualSenseV
         {
             pool.Process();
 
+            tickCounter++;
+
+            if(tickCounter > 600)
+            {
+                tickCounter = 0;
+
+                if(bk != null) Send(bk);
+            }
+
             if (!controlLEDControle && controlLEDPersonagens && controlLEDPolicia)
             {
                     CorControle();
@@ -595,7 +614,7 @@ namespace DualSenseV
 
         private void OnKeyDown(object sender, KeyEventArgs e)
         {
-            if(e.KeyCode == Keys.F10)
+            if (e.KeyCode == Keys.F10)
             {
                 if(!menu.Visible)
                 {
@@ -606,7 +625,7 @@ namespace DualSenseV
                 }
             }
 
-            if(e.KeyCode == Keys.NumPad1)
+            /*if(e.KeyCode == Keys.NumPad1)
             {
                 var npc = World.CreatePed(PedHash.Abigail, Game.Player.Character.GetOffsetPosition(new Vector3(0, 5, 0)));
                 npc.Weapons.Give(WeaponHash.BattleAxe, 1, true, true);
@@ -617,7 +636,7 @@ namespace DualSenseV
             {
                 //World.AddExplosion(Game.Player.Character.GetOffsetInWorldCoords(new Vector3(0, 20, 0)), ExplosionType.Tanker, 10, 1);
 
-                foreach (string linha in File.ReadLines(@"C:\Temp\DualSenseX\DualSenseX_SaveFile_INI.ini"))
+                foreach (string linha in File.ReadLines(@"C:\Program Files (x86)\Steam\steamapps\common\DSX\DSX_Savefile\DSX_SaveFile.ini"))
                 {
                     if (linha.Contains("SaveFile_TouchpadLEDColor"))
                     {
@@ -777,7 +796,7 @@ namespace DualSenseV
 
                 //UI.ShowHelpMessage("~g~Os gatilhos foram definidos para o normal!");
                 GTA.UI.Screen.ShowHelpText("~g~Os gatilhos foram definidos para o normal!");
-            }
+            }*/
         }
 
         private void CorPadrao()
@@ -786,7 +805,7 @@ namespace DualSenseV
             {
                 controlLEDPadrao = false;
 
-                foreach (string linha in File.ReadLines(@"C:\Temp\DualSenseX\DualSenseX_SaveFile_INI.ini"))
+                foreach (string linha in File.ReadLines(@"C:\Program Files (x86)\Steam\steamapps\common\DSX\DSX_Savefile\DSX_SaveFile.ini"))
                 {
                     if (linha.Contains("SaveFile_TouchpadLEDColor"))
                     {

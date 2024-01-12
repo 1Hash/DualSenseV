@@ -1,0 +1,13 @@
+C:\Users\evert\Desktop\DualSenseV-master\DualsenseV\bin\x64\Release\DualSenseV.dll.config
+C:\Users\evert\Desktop\DualSenseV-master\DualsenseV\bin\x64\Release\DualSenseV.dll
+C:\Users\evert\Desktop\DualSenseV-master\DualsenseV\bin\x64\Release\DualSenseV.pdb
+C:\Users\evert\Desktop\DualSenseV-master\DualsenseV\bin\x64\Release\ScriptHookVDotNet3.xml
+C:\Users\evert\Desktop\DualSenseV-master\DualsenseV\bin\x64\Release\System.Diagnostics.DiagnosticSource.xml
+C:\Users\evert\Desktop\DualSenseV-master\DualsenseV\obj\x64\Release\DualSenseV.csproj.AssemblyReference.cache
+C:\Users\evert\Desktop\DualSenseV-master\DualsenseV\obj\x64\Release\DualSenseV.csproj.CoreCompileInputs.cache
+C:\Users\evert\Desktop\DualSenseV-master\DualsenseV\obj\x64\Release\DualSenseV.csproj.Fody.CopyLocal.cache
+C:\Users\evert\Desktop\DualSenseV-master\DualsenseV\obj\x64\Release\DualSenseV.csproj.CopyComplete
+C:\Users\evert\Desktop\DualSenseV-master\DualsenseV\obj\x64\Release\DualSenseV.dll
+C:\Users\evert\Desktop\DualSenseV-master\DualsenseV\obj\x64\Release\DualSenseV.pdb
+C:\Users\evert\Desktop\DualSenseV-master\DualsenseV\bin\x64\Release\ScriptHookVDotNet3.dll
+C:\Users\evert\Desktop\DualSenseV-master\DualsenseV\bin\x64\Release\System.Diagnostics.DiagnosticSource.dll
