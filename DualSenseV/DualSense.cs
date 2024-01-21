@@ -1,24 +1,23 @@
 ﻿using System;
 using System.Text;
 using GTA;
-using GTA.UI;
-using GTA.Math;
 using System.Windows.Forms;
-using GTA.Native;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using System.Windows.Media;
-using System.Reflection;
 using LemonUI;
 using LemonUI.Menus;
-using System.Linq;
+using System.Collections.Generic;
 
 
 namespace DualSenseV
 {
     public class DualSense : Script
     {
+        #region Variables
+
+        public static DualSense Instance;
+
         //Pool
         ObjectPool pool;
 
@@ -192,28 +191,19 @@ namespace DualSenseV
         //Veiculos
         bool controlVeiculos = true;
 
-        static void Connect()
-        {
-            client = new UdpClient();
-            var portNumber = File.ReadAllText(@"C:\Program Files (x86)\Steam\steamapps\common\DSX\DualSenseX_PortNumber.txt");
-            endPoint = new IPEndPoint(Triggers.localhost, Convert.ToInt32(portNumber));
-        }
-
-        static void Send(Packet data)
-        {
-            bk = data;
-            tickCounter = 0;
-
-            var RequestData = Encoding.ASCII.GetBytes(Triggers.PacketToJson(data));
-            client.Send(RequestData, RequestData.Length, endPoint);
-        }
+        #endregion
 
         public DualSense()
         {
+            if(Instance == null) Instance = this;
+
             CosturaUtility.Initialize();
 
             Connect();
             LoadUI();
+
+            // Events
+
             this.Tick += OnTick;
             this.KeyUp += OnKeyUp;
             this.KeyDown += OnKeyDown;
@@ -227,7 +217,7 @@ namespace DualSenseV
             subMenuLeds.SelectedIndexChanged += SubMenuLeds_SelectedIndexChanged;
             subMenuVeiculos.SelectedIndexChanged += SubMenuVeiculos_SelectedIndexChanged;
 
-            //Pistolas
+            // Pistols
             ListItemsP1.ItemChanged += ListItemsP1_ItemChanged;
             ListItemsP2.ItemChanged += ListItemsP2_ItemChanged;
             ListItemsP3.ItemChanged += ListItemsP3_ItemChanged;
@@ -238,7 +228,7 @@ namespace DualSenseV
             ListItemsP8.ItemChanged += ListItemsP8_ItemChanged;
             ListItemsP9.ItemChanged += ListItemsP9_ItemChanged;
 
-            //SMGs
+            // SMGs
             ListItemsM1.ItemChanged += ListItemsM1_ItemChanged;
             ListItemsM2.ItemChanged += ListItemsM2_ItemChanged;
             ListItemsM3.ItemChanged += ListItemsM3_ItemChanged;
@@ -249,7 +239,7 @@ namespace DualSenseV
             ListItemsM8.ItemChanged += ListItemsM8_ItemChanged;
             ListItemsM9.ItemChanged += ListItemsM9_ItemChanged;
 
-            //Rifles
+            // Rifles
             ListItemsR1.ItemChanged += ListItemsR1_ItemChanged;
             ListItemsR2.ItemChanged += ListItemsR2_ItemChanged;
             ListItemsR3.ItemChanged += ListItemsR3_ItemChanged;
@@ -257,12 +247,12 @@ namespace DualSenseV
             ListItemsR5.ItemChanged += ListItemsR5_ItemChanged;
             ListItemsR6.ItemChanged += ListItemsR6_ItemChanged;
 
-            //Snipers
+            // Snipers
             ListItemsS1.ItemChanged += ListItemsS1_ItemChanged;
             ListItemsS2.ItemChanged += ListItemsS2_ItemChanged;
             ListItemsS3.ItemChanged += ListItemsS3_ItemChanged;
 
-            //Escopetas
+            // Shotguns
             ListItemsE1.ItemChanged += ListItemsE1_ItemChanged;
             ListItemsE2.ItemChanged += ListItemsE2_ItemChanged;
             ListItemsE3.ItemChanged += ListItemsE3_ItemChanged;
@@ -272,7 +262,7 @@ namespace DualSenseV
             ListItemsE7.ItemChanged += ListItemsE7_ItemChanged;
             ListItemsE8.ItemChanged += ListItemsE8_ItemChanged;
 
-            //Pesadas
+            // Heavy
             ListItemsPE1.ItemChanged += ListItemsPE1_ItemChanged;
             ListItemsPE2.ItemChanged += ListItemsPE2_ItemChanged;
             ListItemsPE3.ItemChanged += ListItemsPE3_ItemChanged;
@@ -280,293 +270,45 @@ namespace DualSenseV
             ListItemsPE5.ItemChanged += ListItemsPE5_ItemChanged;
             ListItemsPE6.ItemChanged += ListItemsPE6_ItemChanged;
 
-            //LEDs
+            // LEDs
             ListItemsLED1.ItemChanged += ListItemsLED1_ItemChanged;
             ListItemsLED2.ItemChanged += ListItemsLED2_ItemChanged;
             ListItemsLED3.ItemChanged += ListItemsLED3_ItemChanged;
 
-            //Veiculos
+            // Vehicles
             ListItemsV1.ItemChanged += ListItemsV1_ItemChanged;
             
-        }
-
-        private void LoadUI()
-        {
-            pool = new ObjectPool();
-            menu = new NativeMenu("DualSenseV", "Escolha uma opção");
-            pool.Add(menu);
-
-            //basicItem = new NativeItem("Item basico", "Descrição do item basico");
-            //menu.Add(basicItem);
-
-            //checkboxItem = new NativeCheckboxItem("Teste checkbox", "Descrição do item da checkbox", true);
-            //menu.Add(checkboxItem);
-
-            subMenuGatilhos = new NativeMenu("Gatilhos", "Ajustes dos gatilhos");
-            menu.AddSubMenu(subMenuGatilhos);
-            pool.Add(subMenuGatilhos);
-
-            subMenuArmas = new NativeMenu("Armas", "Ajustes das armas");
-            subMenuGatilhos.AddSubMenu(subMenuArmas);
-            pool.Add(subMenuArmas);
-
-            //Lista de pistolas
-            subMenuPistolas = new NativeMenu("Pistolas", "Ajustes das Pistolas");
-            subMenuArmas.AddSubMenu(subMenuPistolas);
-            ListItemsP1 = new NativeListItem<string>("Pistola Clássica", "Altera o modo dos gatilhos da Pistola Clássica", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuPistolas.Add(ListItemsP1);
-            ListItemsP2 = new NativeListItem<string>("Pistola de Comb...", "Altera o modo dos gatilhos da Pistola de Combate", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuPistolas.Add(ListItemsP2);
-            ListItemsP3 = new NativeListItem<string>("Pistola .50", "Altera o modo dos gatilhos da Pistola .50", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuPistolas.Add(ListItemsP3);
-            ListItemsP4 = new NativeListItem<string>("Pistola Fajuta", "Altera o modo dos gatilhos da Pistola Fajuta", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuPistolas.Add(ListItemsP4);
-            ListItemsP5 = new NativeListItem<string>("Pistola Pesada", "Altera o modo dos gatilhos da Pistola Pesada", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuPistolas.Add(ListItemsP5);
-            ListItemsP6 = new NativeListItem<string>("Pistola Vintage", "Altera o modo dos gatilhos da Pistola Vintage", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuPistolas.Add(ListItemsP6);
-            ListItemsP7 = new NativeListItem<string>("Trabuco", "Altera o modo dos gatilhos do Trabuco", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuPistolas.Add(ListItemsP7);
-            ListItemsP8 = new NativeListItem<string>("Pistola AP", "Altera o modo dos gatilhos da Pistola AP", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuPistolas.Add(ListItemsP8);
-            ListItemsP9 = new NativeListItem<string>("Arma de Choque", "Altera o modo dos gatilhos da Arma de Choque (Stungun)", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuPistolas.Add(ListItemsP9);
-            pool.Add(subMenuPistolas);
-
-            //Listas de SMGs
-            subMenuSMG = new NativeMenu("SMGs", "Ajustes das SMGs");
-            subMenuArmas.AddSubMenu(subMenuSMG);
-            ListItemsM1 = new NativeListItem<string>("Micro SMG", "Altera o modo dos gatilhos da Micro SMG", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuSMG.Add(ListItemsM1);
-            ListItemsM2 = new NativeListItem<string>("Pistola Metralh...", "Altera o modo dos gatilhos da Pistola Metralhadora", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuSMG.Add(ListItemsM2);
-            ListItemsM3 = new NativeListItem<string>("Mini SMG", "Altera o modo dos gatilhos da Mini SMG", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuSMG.Add(ListItemsM3);
-            ListItemsM4 = new NativeListItem<string>("Submetralhadora", "Altera o modo dos gatilhos da Submetralhadora", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuSMG.Add(ListItemsM4);
-            ListItemsM5 = new NativeListItem<string>("SMG de Combate", "Altera o modo dos gatilhos da Submetralhadora de Combate", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuSMG.Add(ListItemsM5);
-            ListItemsM6 = new NativeListItem<string>("ADP de Combate", "Altera o modo dos gatilhos da ADP de Combate", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuSMG.Add(ListItemsM6);
-            ListItemsM7 = new NativeListItem<string>("Metralhadora", "Altera o modo dos gatilhos da Metralhadora", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuSMG.Add(ListItemsM7);
-            ListItemsM8 = new NativeListItem<string>("MG de Combate", "Altera o modo dos gatilhos da Metralhadora de Combate", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuSMG.Add(ListItemsM8);
-            ListItemsM9 = new NativeListItem<string>("Metranca", "Altera o modo dos gatilhos da Metranca", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuSMG.Add(ListItemsM9);
-            pool.Add(subMenuSMG);
-
-            //Listas de rifles
-            subMenuRifles = new NativeMenu("Rifles", "Ajustes dos Rifles");
-            subMenuArmas.AddSubMenu(subMenuRifles);
-            ListItemsR1 = new NativeListItem<string>("Carabina", "Altera o modo dos gatilhos da carabina", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuRifles.Add(ListItemsR1);
-            ListItemsR2 = new NativeListItem<string>("Carabina Especial", "Altera o modo dos gatilhos da Carabina Especial", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuRifles.Add(ListItemsR2);
-            ListItemsR3 = new NativeListItem<string>("Fuzil", "Altera o modo dos gatilhos do Fuzil", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuRifles.Add(ListItemsR3);
-            ListItemsR4 = new NativeListItem<string>("Fuzil Compacto", "Altera o modo dos gatilhos do Fuzil Compacto", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuRifles.Add(ListItemsR4);
-            ListItemsR5 = new NativeListItem<string>("Fuzil Bullpup", "Altera o modo dos gatilhos do fuzil Bullpup", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuRifles.Add(ListItemsR5);
-            ListItemsR6 = new NativeListItem<string>("Fuzil Avançado", "Altera o modo dos gatilhos do fuzil Avançado", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuRifles.Add(ListItemsR6);
-            pool.Add(subMenuRifles);
-
-            //Listas de snipers
-            subMenuSnipers = new NativeMenu("Snipers", "Ajustes das Snipers");
-            subMenuArmas.AddSubMenu(subMenuSnipers);
-            ListItemsS1 = new NativeListItem<string>("Rifle de Precisão", "Altera o modo dos gatilhos do Rifle de Precisão", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuSnipers.Add(ListItemsS1);
-            ListItemsS2 = new NativeListItem<string>("Heavy Sniper", "Altera o modo dos gatilhos do Rifle de Precisão Pesado", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuSnipers.Add(ListItemsS2);
-            ListItemsS3 = new NativeListItem<string>("Rifle de Elite", "Altera o modo dos gatilhos do Rifle de Elite", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuSnipers.Add(ListItemsS3);
-            pool.Add(subMenuSnipers);
-
-            //Lista de escopetas
-            subMenuEscopetas = new NativeMenu("Escopetas", "Ajustes das Escopetas");
-            subMenuArmas.AddSubMenu(subMenuEscopetas);
-            ListItemsE1 = new NativeListItem<string>("Escopeta", "Altera o modo dos gatilhos da Escopeta", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuEscopetas.Add(ListItemsE1);
-            ListItemsE2 = new NativeListItem<string>("Escopeta Serrada", "Altera o modo dos gatilhos da Escopeta de Cano Serrado", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuEscopetas.Add(ListItemsE2);
-            ListItemsE3 = new NativeListItem<string>("Escopeta Bullpup", "Altera o modo dos gatilhos da Escopeta Bullpup", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuEscopetas.Add(ListItemsE3);
-            ListItemsE4 = new NativeListItem<string>("Escopeta de Comb...", "Altera o modo dos gatilhos da Escopeta de Combate", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuEscopetas.Add(ListItemsE4);
-            ListItemsE5 = new NativeListItem<string>("Mosquete", "Altera o modo dos gatilhos do Mosquete", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuEscopetas.Add(ListItemsE5);
-            ListItemsE6 = new NativeListItem<string>("Escopeta Pesada", "Altera o modo dos gatilhos da Escopeta Pesada", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuEscopetas.Add(ListItemsE6);
-            ListItemsE7 = new NativeListItem<string>("Escopeta C. Duplo", "Altera o modo dos gatilhos da Escopeta Cano Duplo", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuEscopetas.Add(ListItemsE7);
-            ListItemsE8 = new NativeListItem<string>("Escopeta Automática", "Altera o modo dos gatilhos da Escopeta Automática", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuEscopetas.Add(ListItemsE8);
-            pool.Add(subMenuEscopetas);
-
-            //Lista de armas pesadas
-            subMenuPesadas = new NativeMenu("Armas Pesadas", "Ajustes das Armas Pesadas");
-            subMenuArmas.AddSubMenu(subMenuPesadas);
-            ListItemsPE1 = new NativeListItem<string>("Minigun", "Altera o modo dos gatilhos da Minigun", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuPesadas.Add(ListItemsPE1);
-            ListItemsPE2 = new NativeListItem<string>("RPG", "Altera o modo dos gatilhos da RPG", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuPesadas.Add(ListItemsPE2);
-            ListItemsPE3 = new NativeListItem<string>("Lança-granada", "Altera o modo dos gatilhos do Lança-granada", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuPesadas.Add(ListItemsPE3);
-            ListItemsPE4 = new NativeListItem<string>("Lança-granada Comp.", "Altera o modo dos gatilhos do Lança-granada Compacto", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuPesadas.Add(ListItemsPE4);
-            ListItemsPE5 = new NativeListItem<string>("Lança-mísseis Tel.", "Altera o modo dos gatilhos do Lança-mísseis Teleguiado", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuPesadas.Add(ListItemsPE5);
-            ListItemsPE6 = new NativeListItem<string>("Canhão-elétrico", "Altera o modo dos gatilhos do Canhão-elétrico (Railgun)", "Gatilho com recuo", "Gatilho sem recuo");
-            subMenuPesadas.Add(ListItemsPE6);
-            pool.Add(subMenuPesadas);
-
-            subMenuLeds = new NativeMenu("Cores Touchpad", "Cores do Touchpad do Controle");
-            ListItemsLED1 = new NativeListItem<string>("Cores dos personagens", "Altera o modo dos LEDs de acordo com a cor do personagem que está sendo jogado", "Ativo", "Desativado");
-            subMenuLeds.Add(ListItemsLED1);
-            ListItemsLED2 = new NativeListItem<string>("Fugindo da polícia", "Altera o modo dos LEDs caso você esteja fugindo da polícia", "Ativo", "Desativado");
-            subMenuLeds.Add(ListItemsLED2);
-            ListItemsLED3 = new NativeListItem<string>("Utilizar minhas cores", "Altera o modo dos LEDs para o seu perfil pré-definido do DualSenseX (isso acaba ignorando todas as configurações acima)", "Desativado", "Ativado");
-            subMenuLeds.Add(ListItemsLED3);
-            menu.AddSubMenu(subMenuLeds);
-            pool.Add(subMenuLeds);
-
-            subMenuVeiculos = new NativeMenu("Veículos", "Ajustes dos veículos");
-            subMenuGatilhos.AddSubMenu(subMenuVeiculos);
-            ListItemsV1 = new NativeListItem<string>("Gatilhos no Veículo", "Altera o modo dos gatilhos nos veículos", "Ativado", "Desativado");
-            subMenuVeiculos.Add(ListItemsV1);
-            pool.Add(subMenuVeiculos);
-
-
-            //ListItems = new NativeListItem<string>("Gatilhos pistolas", "Altera o modo dos gatilhos da pistola", "Apenas o gatilho", "Gatilho com coice");
-            //itemSubmenu.Menu.Add(ListItems);
-            //menu.Add(ListItems);
-
-            //SliderItem = new NativeSliderItem("Teste slider", "Descrição do item slider");
-            //menu.Add(SliderItem);
-          
-            //menu.RotateCamera = true;
         }
 
         private void OnTick(object sender, EventArgs e)
         {
             pool.Process();
 
-            tickCounter++;
+            ControlLEDs();
 
-            if(tickCounter > 600)
+            if (isValidForChangeTriggers() && controlN)
             {
-                tickCounter = 0;
+                controlN = false;
+                control = true;
+                controlDS = true;
+                controlArma = true;
 
-                if(bk != null) Send(bk);
-            }
-
-            if (!controlLEDControle && controlLEDPersonagens && controlLEDPolicia)
-            {
-                    CorControle();
-                    CorProcurado();
-            } 
-            else if(!controlLEDControle && !controlLEDPersonagens && controlLEDPolicia)
-            {
-                CorPadrao();
-                CorProcurado();
-                        
-            }
-            else
-            {
-                CorPadrao();
-            }
-
-            if ((Game.Player.Character.Weapons.Current.AmmoInClip == 0 && Game.Player.Character.IsReloading == true) || Game.Player.Character.IsReloading == true || Game.Player.Character.IsJumping == true || Game.Player.Character.IsGettingUp == true || Game.Player.Character.IsInMeleeCombat == true || Game.Player.Character.IsInjured == true || Game.Player.Character.IsInVehicle() == true || Game.Player.Character.IsSwimming == true || Game.Player.Character.IsSwimmingUnderWater == true || Game.Player.Character.IsProne == true || Game.Player.Character.IsJacking == true || Game.Player.Character.IsRagdoll == true || Game.Player.Character.IsJumpingOutOfVehicle == true || Game.Player.Character.IsFalling == true || Game.Player.Character.IsClimbing == true || Game.Player.Character.IsDiving == true || Game.Player.Character.IsDead == true || Game.Player.Character.IsCuffed == true || Game.Player.Character.IsBeingStunned == true || Game.Player.Character.IsGettingIntoVehicle == true || Game.Player.Character.Weapons.Current.Hash == WeaponHash.Unarmed)
-            {
-                if (controlN)
-                {
-                    controlN = false;
-                    control = true;
-                    controlDS = true;
-                    controlArma = true;
-
-                    Packet p = new Packet();
-                    p.instructions = new Instruction[6];
-
-                    p.instructions[0].type = InstructionType.TriggerUpdate;
-                    p.instructions[0].parameters = new object[] { 0, Trigger.Left, TriggerMode.Normal };
-
-                    p.instructions[1].type = InstructionType.TriggerUpdate;
-                    p.instructions[1].parameters = new object[] { 0, Trigger.Right, TriggerMode.Normal };
-
-                    Send(p);
-                }
+                ResetTriggers();
             }
             else if (Game.Player.Character.Weapons.Current.AmmoInClip >= 0 && Game.Player.Character.IsReloading == false)
             {
-                //Pistolas
-                if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.Pistol) { GatilhoArmas(controlGatilhoPistolaClassica, 3, 0, 10); }
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.CombatPistol) { GatilhoArmas(controlGatilhoCombatPistol, 3, 0, 10); }
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.Pistol50) { GatilhoArmas(controlGatilhoPistol50, 2, 0, 10); }
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.SNSPistol) { GatilhoArmas(controlGatilhoSNSPistol, 3, 0, 10); }
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.HeavyPistol) { GatilhoArmas(controlGatilhoHeavyPistol, 2, 0, 10); }
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.VintagePistol) { GatilhoArmas(controlGatilhoVintagePistol, 2, 0, 10); }
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.MarksmanPistol) { GatilhoArmas(controlGatilhoMarksmanPistol, 1, 1, 10); }
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.Revolver) { GatilhoArmas(false, 0, 1, 10); }
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.APPistol) { GatilhoArmas(controlGatilhoPistolAP, 8, 0, 10); }
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.StunGun) { GatilhoArmas(controlGatilhoStunGun, 1, 0, 10); }
-                //SMGs
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.MicroSMG) { GatilhoArmas(controlGatilhoMicroSMG, 10, 0, 10); }
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.MachinePistol) { GatilhoArmas(controlGatilhoMachinePistol, 9, 0, 10); }
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.MiniSMG) { GatilhoArmas(controlGatilhoMiniSMG, 10, 0, 10); }
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.SMG) { GatilhoArmas(controlGatilhoSMG, 10, 0, 10); }
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.AssaultSMG) { GatilhoArmas(controlGatilhoAssaltSMG, 10, 0, 10); }
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.CombatPDW) { GatilhoArmas(controlGatilhoCombatPDW, 8, 0, 10); }
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.MG) { GatilhoArmas(controlGatilhoMG, 7, 0, 10); }
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.CombatMG) { GatilhoArmas(controlGatilhoCombatMG, 8, 0, 10); }
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.Gusenberg) { GatilhoArmas(controlGatilhoGusenberg, 10, 0, 10); }
-                //Rifles
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.CarbineRifle) { GatilhoArmas(controlGatilhoCarbineRifle, 9, 0, 10); }
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.AssaultRifle) { GatilhoArmas(controlGatilhoAssaultRifle, 9, 0, 10); }
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.BullpupRifle) { GatilhoArmas(controlGatilhoBullpupRifle, 9, 0, 10); } 
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.AdvancedRifle) { GatilhoArmas(controlGatilhoAdvancedRifle, 9, 0, 10); }
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.CompactRifle) { GatilhoArmas(controlGatilhoCompactRifle, 8, 0, 10); }
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.SpecialCarbine) { GatilhoArmas(controlGatilhoSpecialCarbine, 10, 0, 10); }
-                //Snipers
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.SniperRifle) { GatilhoArmas(controlGatilhoSniperRifle, 1, 0, 10); }
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.HeavySniper) { GatilhoArmas(controlGatilhoHeavySniper, 1, 0, 10); }
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.MarksmanRifle) { GatilhoArmas(controlGatilhoMarksmanRifle, 3, 0, 20); }
-                //Escopetas
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.PumpShotgun) { GatilhoArmas(controlGatilhoPumpShotgun, 1, 0, 10); }
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.SawnOffShotgun) { GatilhoArmas(controlGatilhoOffShotgun, 1, 0, 10); }
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.BullpupShotgun) { GatilhoArmas(controlGatilhoBShotgun, 1, 0, 10); }
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.AssaultShotgun) { GatilhoArmas(controlGatilhoAssaltShotgun, 4, 0, 20); }
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.Musket) { GatilhoArmas(controlGatilhoMusket, 1, 0, 10); }
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.HeavyShotgun) { GatilhoArmas(controlGatilhoHeavyShotgun, 4, 0, 20); }
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.DoubleBarrelShotgun) { GatilhoArmas(controlGatilhoDBShotgun, 5, 0, 10); }
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.SweeperShotgun) { GatilhoArmas(controlGatilhoSweeperShotgun, 3, 0, 20); }
-                //Pesadas
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.Minigun) { GatilhoArmas(controlGatilhoMinigun, 17, 0, 25); }
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.RPG) { GatilhoArmas(controlGatilhoRPG, 1, 0, 10); }
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.GrenadeLauncher) { GatilhoArmas(controlGatilhoLG, 1, 0, 10); }
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.CompactGrenadeLauncher) { GatilhoArmas(controlGatilhoLGC, 1, 0, 10); }
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.HomingLauncher) { GatilhoArmas(controlGatilhoLMT, 1, 0, 10); }
-                else if (Game.Player.Character.Weapons.Current.Hash == WeaponHash.Railgun) { GatilhoArmas(controlGatilhoRailgun, 1, 0, 10); }
-                else
+                var currentWeaponHash = Game.Player.Character.Weapons.Current.Hash;
+
+                if (weaponMappings.TryGetValue(currentWeaponHash, out var weaponAction))
                 {
-                    if (controlArma)
-                    {
-                        controlArma = false;
-                        controlDS = true;
+                    weaponAction.Item1.Invoke();
+                }
+                else if (controlArma)
+                {
+                    controlArma = false;
+                    controlDS = true;
 
-                        Packet p = new Packet();
-                        p.instructions = new Instruction[6];
-
-                        p.instructions[0].type = InstructionType.TriggerUpdate;
-                        p.instructions[0].parameters = new object[] { 0, Trigger.Left, TriggerMode.Normal };
-
-                        p.instructions[1].type = InstructionType.TriggerUpdate;
-                        p.instructions[1].parameters = new object[] { 0, Trigger.Right, TriggerMode.Normal };
-
-                        Send(p);
-                    }
+                    ResetTriggers();
                 }
             }
 
@@ -577,43 +319,27 @@ namespace DualSenseV
                     controlV = false;
                     controlV2 = true;
 
-                    Packet p = new Packet();
-                    p.instructions = new Instruction[6];
-
-                    p.instructions[0].type = InstructionType.TriggerUpdate;
-                    p.instructions[0].parameters = new object[] { 0, Trigger.Left, TriggerMode.CustomTriggerValue, CustomTriggerValueMode.Rigid, 70, 5, 0, 0, 0, 0, 0 };
-
-                    p.instructions[1].type = InstructionType.TriggerUpdate;
-                    p.instructions[1].parameters = new object[] { 0, Trigger.Right, TriggerMode.CustomTriggerValue, CustomTriggerValueMode.Rigid, 110, 2, 0, 0, 0, 0, 0 };
-
-                    Send(p);
+                    ChangeTriggersVehicle();
                 }
                 else if ((Game.Player.Character.IsJumpingOutOfVehicle || !Game.Player.Character.IsSittingInVehicle()) && controlV2)
                 {
                     controlV = true;
                     controlV2 = false;
 
-                    Packet p = new Packet();
-                    p.instructions = new Instruction[6];
-
-                    p.instructions[0].type = InstructionType.TriggerUpdate;
-                    p.instructions[0].parameters = new object[] { 0, Trigger.Left, TriggerMode.Normal };
-
-                    p.instructions[1].type = InstructionType.TriggerUpdate;
-                    p.instructions[1].parameters = new object[] { 0, Trigger.Right, TriggerMode.Normal };
-
-                    Send(p);
+                    ResetTriggers();
                 }
             }
         }
 
         private void OnKeyUp(object sender, KeyEventArgs e)
         {
-            
+            // Nothing for now
         }
 
         private void OnKeyDown(object sender, KeyEventArgs e)
         {
+            // Open config menu
+
             if (e.KeyCode == Keys.F10)
             {
                 if(!menu.Visible)
@@ -624,6 +350,8 @@ namespace DualSenseV
                     menu.Visible = false;
                 }
             }
+
+            #region Test
 
             /*if(e.KeyCode == Keys.NumPad1)
             {
@@ -797,201 +525,16 @@ namespace DualSenseV
                 //UI.ShowHelpMessage("~g~Os gatilhos foram definidos para o normal!");
                 GTA.UI.Screen.ShowHelpText("~g~Os gatilhos foram definidos para o normal!");
             }*/
+
+            #endregion
         }
 
-        private void CorPadrao()
-        {
-            if (controlLEDPadrao)
-            {
-                controlLEDPadrao = false;
+        #region Triggers functions
 
-                foreach (string linha in File.ReadLines(@"C:\Program Files (x86)\Steam\steamapps\common\DSX\DSX_Savefile\DSX_SaveFile.ini"))
-                {
-                    if (linha.Contains("SaveFile_TouchpadLEDColor"))
-                    {
-                        string[] cor = linha.Split('=');
-
-                        var rgba = System.Drawing.ColorTranslator.FromHtml(cor[1]);
-
-                        Packet p = new Packet();
-                        p.instructions = new Instruction[6];
-
-                        p.instructions[2].type = InstructionType.RGBUpdate;
-                        p.instructions[2].parameters = new object[] { 0, rgba.R, rgba.G, rgba.B, rgba.A };
-
-                        Send(p);
-                    }
-                }
-            }
-        }
-
-        private void CorProcurado()
-        {
-            if (Game.Player.WantedLevel > 0)
-            {
-                condP = true;
-
-                if (contP == 50 && contC < 11)
-                {
-                    contP = 0;
-                    contC++;
-
-                    Packet p = new Packet();
-                    p.instructions = new Instruction[6];
-
-                    p.instructions[2].type = InstructionType.RGBUpdate;
-                    p.instructions[2].parameters = new object[] { 0, 255, 0, 0 }; //Vermelho
-
-                    Send(p);
-                }
-                else if (contP == 25 && contC < 11)
-                {
-                    contC++;
-
-                    Packet p = new Packet();
-                    p.instructions = new Instruction[6];
-
-                    p.instructions[2].type = InstructionType.RGBUpdate;
-                    p.instructions[2].parameters = new object[] { 0, 0, 0, 255 }; //Azul
-
-                    Send(p);
-                }
-
-                if (contC > 10 && contC < 16)
-                {
-                    if (contP2 == 120)
-                    {
-                        contP2 = 0;
-                        contC++;
-
-                        Packet p = new Packet();
-                        p.instructions = new Instruction[6];
-
-                        p.instructions[2].type = InstructionType.RGBUpdate;
-                        p.instructions[2].parameters = new object[] { 0, 255, 0, 0 }; //Vermelho
-
-                        Send(p);
-
-                    }
-                    else if (contP2 == 60)
-                    {
-                        contC++;
-
-                        Packet p = new Packet();
-                        p.instructions = new Instruction[6];
-
-                        p.instructions[2].type = InstructionType.RGBUpdate;
-                        p.instructions[2].parameters = new object[] { 0, 0, 0, 255 }; //Azul
-
-                        Send(p);
-                    }
-                    contP2++;
-                }
-                else if (contC > 15)
-                {
-                    contP = 0;
-                    contP2 = 60;
-                    contC = 0;
-                }
-
-                contP++;
-            }
-            else if (condP == true)
-            {
-                condP = false;
-                contP = 0;
-                contP2 = 60;
-                contC = 0;
-
-                if(controlLEDPersonagens)
-                {
-                    ccorT = true;
-                    ccorM = true;
-                    ccorF = true;
-                    ccorO = true;
-                    CorControle();
-                }
-                else
-                {
-                    controlLEDPadrao = true;
-                    CorPadrao();
-                }
-            }
-        }
-
-        private void CorControle()
-        {
-            if (Game.Player.Character.Model.Hash == -1686040670 && ccorT == true) //Trevor
-            {
-                ccorT = false;
-                ccorF = true;
-                ccorM = true;
-                ccorO = true;
-
-                Packet p = new Packet();
-                p.instructions = new Instruction[6];
-
-                p.instructions[2].type = InstructionType.RGBUpdate;
-                p.instructions[2].parameters = new object[] { 0, 255, 100, 0 }; //Laranja
-
-                Send(p);
-            }
-
-            if (Game.Player.Character.Model.Hash == -1692214353 && ccorF == true) //Franklin
-            {
-                ccorT = true;
-                ccorF = false;
-                ccorM = true;
-                ccorO = true;
-
-                Packet p = new Packet();
-                p.instructions = new Instruction[6];
-
-                p.instructions[2].type = InstructionType.RGBUpdate;
-                p.instructions[2].parameters = new object[] { 0, 50, 255, 0 }; //Verde
-
-                Send(p);
-
-            }
-
-            if (Game.Player.Character.Model.Hash == 225514697 && ccorM == true) //Michael
-            {
-                ccorT = true;
-                ccorF = true;
-                ccorM = false;
-                ccorO = true;
-
-                Packet p = new Packet();
-                p.instructions = new Instruction[6];
-
-                p.instructions[2].type = InstructionType.RGBUpdate;
-                p.instructions[2].parameters = new object[] { 0, 0, 50, 255 }; //Azul
-
-                Send(p);
-            }
-
-            if (Game.Player.Character.Model.Hash != 225514697 && Game.Player.Character.Model.Hash != -1692214353 && Game.Player.Character.Model.Hash != -1686040670 && ccorO == true) //Outro
-            {
-                ccorT = true;
-                ccorF = true;
-                ccorM = true;
-                ccorO = false;
-
-                Packet p = new Packet();
-                p.instructions = new Instruction[6];
-
-                p.instructions[2].type = InstructionType.RGBUpdate;
-                p.instructions[2].parameters = new object[] { 0, 255, 0, 255 }; //Roxo
-
-                Send(p);
-            }
-        }
-
-        private void GatilhoArmas(bool controlGatilhos, int cadenciaTiros, int modoGatilho, int ticksChange)
+        private void ActivateWeaponTriggers(bool controlGatilhos, int cadenciaTiros, int modoGatilho, int ticksChange)
         {
             if (control && Game.Player.Character.IsShooting == true)
             {
-                //GTA.UI.Screen.ShowHelpText("Atirando");
                 control = false;
                 controlN = true;
 
@@ -1020,7 +563,8 @@ namespace DualSenseV
                     p.instructions[1].type = InstructionType.TriggerUpdate;
                     p.instructions[1].parameters = new object[] { 0, Trigger.Right, TriggerMode.CustomTriggerValue, CustomTriggerValueMode.PulseB, cadenciaTiros, 255, 140, 0, 0, 0, 0 };
 
-                } else
+                } 
+                else
                 {
                     if (modoGatilho == 0)
                     {
@@ -1103,7 +647,428 @@ namespace DualSenseV
 
         }
 
-        #region Funções de eventos dos menus
+        private void ChangeTriggersVehicle()
+        {
+            Packet p = new Packet();
+            p.instructions = new Instruction[6];
+
+            p.instructions[0].type = InstructionType.TriggerUpdate;
+            p.instructions[0].parameters = new object[] { 0, Trigger.Left, TriggerMode.CustomTriggerValue, CustomTriggerValueMode.Rigid, 70, 5, 0, 0, 0, 0, 0 };
+
+            p.instructions[1].type = InstructionType.TriggerUpdate;
+            p.instructions[1].parameters = new object[] { 0, Trigger.Right, TriggerMode.CustomTriggerValue, CustomTriggerValueMode.Rigid, 110, 2, 0, 0, 0, 0, 0 };
+
+            Send(p);
+        }
+
+        private void ResetTriggers()
+        {
+            Packet p = new Packet();
+            p.instructions = new Instruction[6];
+
+            p.instructions[0].type = InstructionType.TriggerUpdate;
+            p.instructions[0].parameters = new object[] { 0, Trigger.Left, TriggerMode.Normal };
+
+            p.instructions[1].type = InstructionType.TriggerUpdate;
+            p.instructions[1].parameters = new object[] { 0, Trigger.Right, TriggerMode.Normal };
+
+            Send(p);
+        }
+
+        private bool isValidForChangeTriggers()
+        {
+            if ((Game.Player.Character.Weapons.Current.AmmoInClip == 0 &&
+                Game.Player.Character.IsReloading) ||
+                Game.Player.Character.IsReloading ||
+                Game.Player.Character.IsJumping ||
+                Game.Player.Character.IsGettingUp ||
+                Game.Player.Character.IsInMeleeCombat ||
+                Game.Player.Character.IsInjured ||
+                Game.Player.Character.IsInVehicle() ||
+                Game.Player.Character.IsSwimming ||
+                Game.Player.Character.IsSwimmingUnderWater ||
+                Game.Player.Character.IsProne ||
+                Game.Player.Character.IsJacking ||
+                Game.Player.Character.IsRagdoll ||
+                Game.Player.Character.IsJumpingOutOfVehicle ||
+                Game.Player.Character.IsFalling ||
+                Game.Player.Character.IsClimbing ||
+                Game.Player.Character.IsDiving ||
+                Game.Player.Character.IsDead ||
+                Game.Player.Character.IsCuffed ||
+                Game.Player.Character.IsBeingStunned ||
+                Game.Player.Character.IsGettingIntoVehicle ||
+                Game.Player.Character.Weapons.Current.Hash == WeaponHash.Unarmed) return true;
+            else return false;
+
+        }
+
+        #endregion
+
+        #region Color LEDs functions
+
+        private void ControlLEDs()
+        {
+            tickCounter++;
+
+            if (tickCounter > 600)
+            {
+                tickCounter = 0;
+                if (bk != null) Send(bk);
+            }
+
+            if (!controlLEDControle && controlLEDPersonagens && controlLEDPolicia)
+            {
+                ColorJoystick();
+                ColorJoystickWanted();
+            }
+            else if (!controlLEDControle && !controlLEDPersonagens && controlLEDPolicia)
+            {
+                DefaultColor();
+                ColorJoystickWanted();
+            }
+            else
+                DefaultColor();
+        }
+
+        private void ColorJoystick()
+        {
+            if (Game.Player.Character.Model.Hash == -1686040670 && ccorT == true) //Trevor
+            {
+                ccorT = false;
+                ccorF = true;
+                ccorM = true;
+                ccorO = true;
+
+                Packet p = new Packet();
+                p.instructions = new Instruction[6];
+
+                p.instructions[2].type = InstructionType.RGBUpdate;
+                p.instructions[2].parameters = new object[] { 0, 255, 100, 0 }; //Orange
+
+                Send(p);
+            }
+
+            if (Game.Player.Character.Model.Hash == -1692214353 && ccorF == true) //Franklin
+            {
+                ccorT = true;
+                ccorF = false;
+                ccorM = true;
+                ccorO = true;
+
+                Packet p = new Packet();
+                p.instructions = new Instruction[6];
+
+                p.instructions[2].type = InstructionType.RGBUpdate;
+                p.instructions[2].parameters = new object[] { 0, 50, 255, 0 }; //Green
+
+                Send(p);
+
+            }
+
+            if (Game.Player.Character.Model.Hash == 225514697 && ccorM == true) //Michael
+            {
+                ccorT = true;
+                ccorF = true;
+                ccorM = false;
+                ccorO = true;
+
+                Packet p = new Packet();
+                p.instructions = new Instruction[6];
+
+                p.instructions[2].type = InstructionType.RGBUpdate;
+                p.instructions[2].parameters = new object[] { 0, 0, 50, 255 }; //Blue
+
+                Send(p);
+            }
+
+            if (Game.Player.Character.Model.Hash != 225514697 && Game.Player.Character.Model.Hash != -1692214353 && Game.Player.Character.Model.Hash != -1686040670 && ccorO == true) //Outro
+            {
+                ccorT = true;
+                ccorF = true;
+                ccorM = true;
+                ccorO = false;
+
+                Packet p = new Packet();
+                p.instructions = new Instruction[6];
+
+                p.instructions[2].type = InstructionType.RGBUpdate;
+                p.instructions[2].parameters = new object[] { 0, 255, 0, 255 }; //Purple
+
+                Send(p);
+            }
+        }
+
+        private void ColorJoystickWanted()
+        {
+            if (Game.Player.WantedLevel > 0)
+            {
+                condP = true;
+
+                if (contP == 50 && contC < 11)
+                {
+                    contP = 0;
+                    contC++;
+
+                    Packet p = new Packet();
+                    p.instructions = new Instruction[6];
+
+                    p.instructions[2].type = InstructionType.RGBUpdate;
+                    p.instructions[2].parameters = new object[] { 0, 255, 0, 0 }; //Vermelho
+
+                    Send(p);
+                }
+                else if (contP == 25 && contC < 11)
+                {
+                    contC++;
+
+                    Packet p = new Packet();
+                    p.instructions = new Instruction[6];
+
+                    p.instructions[2].type = InstructionType.RGBUpdate;
+                    p.instructions[2].parameters = new object[] { 0, 0, 0, 255 }; //Azul
+
+                    Send(p);
+                }
+
+                if (contC > 10 && contC < 16)
+                {
+                    if (contP2 == 120)
+                    {
+                        contP2 = 0;
+                        contC++;
+
+                        Packet p = new Packet();
+                        p.instructions = new Instruction[6];
+
+                        p.instructions[2].type = InstructionType.RGBUpdate;
+                        p.instructions[2].parameters = new object[] { 0, 255, 0, 0 }; //Vermelho
+
+                        Send(p);
+
+                    }
+                    else if (contP2 == 60)
+                    {
+                        contC++;
+
+                        Packet p = new Packet();
+                        p.instructions = new Instruction[6];
+
+                        p.instructions[2].type = InstructionType.RGBUpdate;
+                        p.instructions[2].parameters = new object[] { 0, 0, 0, 255 }; //Azul
+
+                        Send(p);
+                    }
+                    contP2++;
+                }
+                else if (contC > 15)
+                {
+                    contP = 0;
+                    contP2 = 60;
+                    contC = 0;
+                }
+
+                contP++;
+            }
+            else if (condP == true)
+            {
+                condP = false;
+                contP = 0;
+                contP2 = 60;
+                contC = 0;
+
+                if (controlLEDPersonagens)
+                {
+                    ccorT = true;
+                    ccorM = true;
+                    ccorF = true;
+                    ccorO = true;
+                    ColorJoystick();
+                }
+                else
+                {
+                    controlLEDPadrao = true;
+                    DefaultColor();
+                }
+            }
+        }
+
+        private void DefaultColor()
+        {
+            if (controlLEDPadrao)
+            {
+                controlLEDPadrao = false;
+
+                foreach (string linha in File.ReadLines(@"C:\Program Files (x86)\Steam\steamapps\common\DSX\DSX_Savefile\DSX_SaveFile.ini"))
+                {
+                    if (linha.Contains("SaveFile_TouchpadLEDColor"))
+                    {
+                        string[] cor = linha.Split('=');
+
+                        var rgba = System.Drawing.ColorTranslator.FromHtml(cor[1]);
+
+                        Packet p = new Packet();
+                        p.instructions = new Instruction[6];
+
+                        p.instructions[2].type = InstructionType.RGBUpdate;
+                        p.instructions[2].parameters = new object[] { 0, rgba.R, rgba.G, rgba.B, rgba.A };
+
+                        Send(p);
+                    }
+                }
+            }
+        }
+
+        #endregion
+
+        #region UI functions
+
+        private void LoadUI()
+        {
+            pool = new ObjectPool();
+            menu = new NativeMenu("DualSenseV", "Escolha uma opção");
+            pool.Add(menu);
+
+            subMenuGatilhos = new NativeMenu("Gatilhos", "Ajustes dos gatilhos");
+            menu.AddSubMenu(subMenuGatilhos);
+            pool.Add(subMenuGatilhos);
+
+            subMenuArmas = new NativeMenu("Armas", "Ajustes das armas");
+            subMenuGatilhos.AddSubMenu(subMenuArmas);
+            pool.Add(subMenuArmas);
+
+            //Lista de pistolas
+            subMenuPistolas = new NativeMenu("Pistolas", "Ajustes das Pistolas");
+            subMenuArmas.AddSubMenu(subMenuPistolas);
+            ListItemsP1 = new NativeListItem<string>("Pistola Clássica", "Altera o modo dos gatilhos da Pistola Clássica", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuPistolas.Add(ListItemsP1);
+            ListItemsP2 = new NativeListItem<string>("Pistola de Comb...", "Altera o modo dos gatilhos da Pistola de Combate", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuPistolas.Add(ListItemsP2);
+            ListItemsP3 = new NativeListItem<string>("Pistola .50", "Altera o modo dos gatilhos da Pistola .50", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuPistolas.Add(ListItemsP3);
+            ListItemsP4 = new NativeListItem<string>("Pistola Fajuta", "Altera o modo dos gatilhos da Pistola Fajuta", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuPistolas.Add(ListItemsP4);
+            ListItemsP5 = new NativeListItem<string>("Pistola Pesada", "Altera o modo dos gatilhos da Pistola Pesada", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuPistolas.Add(ListItemsP5);
+            ListItemsP6 = new NativeListItem<string>("Pistola Vintage", "Altera o modo dos gatilhos da Pistola Vintage", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuPistolas.Add(ListItemsP6);
+            ListItemsP7 = new NativeListItem<string>("Trabuco", "Altera o modo dos gatilhos do Trabuco", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuPistolas.Add(ListItemsP7);
+            ListItemsP8 = new NativeListItem<string>("Pistola AP", "Altera o modo dos gatilhos da Pistola AP", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuPistolas.Add(ListItemsP8);
+            ListItemsP9 = new NativeListItem<string>("Arma de Choque", "Altera o modo dos gatilhos da Arma de Choque (Stungun)", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuPistolas.Add(ListItemsP9);
+            pool.Add(subMenuPistolas);
+
+            //Listas de SMGs
+            subMenuSMG = new NativeMenu("SMGs", "Ajustes das SMGs");
+            subMenuArmas.AddSubMenu(subMenuSMG);
+            ListItemsM1 = new NativeListItem<string>("Micro SMG", "Altera o modo dos gatilhos da Micro SMG", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuSMG.Add(ListItemsM1);
+            ListItemsM2 = new NativeListItem<string>("Pistola Metralh...", "Altera o modo dos gatilhos da Pistola Metralhadora", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuSMG.Add(ListItemsM2);
+            ListItemsM3 = new NativeListItem<string>("Mini SMG", "Altera o modo dos gatilhos da Mini SMG", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuSMG.Add(ListItemsM3);
+            ListItemsM4 = new NativeListItem<string>("Submetralhadora", "Altera o modo dos gatilhos da Submetralhadora", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuSMG.Add(ListItemsM4);
+            ListItemsM5 = new NativeListItem<string>("SMG de Combate", "Altera o modo dos gatilhos da Submetralhadora de Combate", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuSMG.Add(ListItemsM5);
+            ListItemsM6 = new NativeListItem<string>("ADP de Combate", "Altera o modo dos gatilhos da ADP de Combate", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuSMG.Add(ListItemsM6);
+            ListItemsM7 = new NativeListItem<string>("Metralhadora", "Altera o modo dos gatilhos da Metralhadora", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuSMG.Add(ListItemsM7);
+            ListItemsM8 = new NativeListItem<string>("MG de Combate", "Altera o modo dos gatilhos da Metralhadora de Combate", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuSMG.Add(ListItemsM8);
+            ListItemsM9 = new NativeListItem<string>("Metranca", "Altera o modo dos gatilhos da Metranca", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuSMG.Add(ListItemsM9);
+            pool.Add(subMenuSMG);
+
+            //Listas de rifles
+            subMenuRifles = new NativeMenu("Rifles", "Ajustes dos Rifles");
+            subMenuArmas.AddSubMenu(subMenuRifles);
+            ListItemsR1 = new NativeListItem<string>("Carabina", "Altera o modo dos gatilhos da carabina", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuRifles.Add(ListItemsR1);
+            ListItemsR2 = new NativeListItem<string>("Carabina Especial", "Altera o modo dos gatilhos da Carabina Especial", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuRifles.Add(ListItemsR2);
+            ListItemsR3 = new NativeListItem<string>("Fuzil", "Altera o modo dos gatilhos do Fuzil", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuRifles.Add(ListItemsR3);
+            ListItemsR4 = new NativeListItem<string>("Fuzil Compacto", "Altera o modo dos gatilhos do Fuzil Compacto", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuRifles.Add(ListItemsR4);
+            ListItemsR5 = new NativeListItem<string>("Fuzil Bullpup", "Altera o modo dos gatilhos do fuzil Bullpup", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuRifles.Add(ListItemsR5);
+            ListItemsR6 = new NativeListItem<string>("Fuzil Avançado", "Altera o modo dos gatilhos do fuzil Avançado", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuRifles.Add(ListItemsR6);
+            pool.Add(subMenuRifles);
+
+            //Listas de snipers
+            subMenuSnipers = new NativeMenu("Snipers", "Ajustes das Snipers");
+            subMenuArmas.AddSubMenu(subMenuSnipers);
+            ListItemsS1 = new NativeListItem<string>("Rifle de Precisão", "Altera o modo dos gatilhos do Rifle de Precisão", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuSnipers.Add(ListItemsS1);
+            ListItemsS2 = new NativeListItem<string>("Heavy Sniper", "Altera o modo dos gatilhos do Rifle de Precisão Pesado", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuSnipers.Add(ListItemsS2);
+            ListItemsS3 = new NativeListItem<string>("Rifle de Elite", "Altera o modo dos gatilhos do Rifle de Elite", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuSnipers.Add(ListItemsS3);
+            pool.Add(subMenuSnipers);
+
+            //Lista de escopetas
+            subMenuEscopetas = new NativeMenu("Escopetas", "Ajustes das Escopetas");
+            subMenuArmas.AddSubMenu(subMenuEscopetas);
+            ListItemsE1 = new NativeListItem<string>("Escopeta", "Altera o modo dos gatilhos da Escopeta", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuEscopetas.Add(ListItemsE1);
+            ListItemsE2 = new NativeListItem<string>("Escopeta Serrada", "Altera o modo dos gatilhos da Escopeta de Cano Serrado", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuEscopetas.Add(ListItemsE2);
+            ListItemsE3 = new NativeListItem<string>("Escopeta Bullpup", "Altera o modo dos gatilhos da Escopeta Bullpup", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuEscopetas.Add(ListItemsE3);
+            ListItemsE4 = new NativeListItem<string>("Escopeta de Comb...", "Altera o modo dos gatilhos da Escopeta de Combate", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuEscopetas.Add(ListItemsE4);
+            ListItemsE5 = new NativeListItem<string>("Mosquete", "Altera o modo dos gatilhos do Mosquete", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuEscopetas.Add(ListItemsE5);
+            ListItemsE6 = new NativeListItem<string>("Escopeta Pesada", "Altera o modo dos gatilhos da Escopeta Pesada", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuEscopetas.Add(ListItemsE6);
+            ListItemsE7 = new NativeListItem<string>("Escopeta C. Duplo", "Altera o modo dos gatilhos da Escopeta Cano Duplo", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuEscopetas.Add(ListItemsE7);
+            ListItemsE8 = new NativeListItem<string>("Escopeta Automática", "Altera o modo dos gatilhos da Escopeta Automática", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuEscopetas.Add(ListItemsE8);
+            pool.Add(subMenuEscopetas);
+
+            //Lista de armas pesadas
+            subMenuPesadas = new NativeMenu("Armas Pesadas", "Ajustes das Armas Pesadas");
+            subMenuArmas.AddSubMenu(subMenuPesadas);
+            ListItemsPE1 = new NativeListItem<string>("Minigun", "Altera o modo dos gatilhos da Minigun", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuPesadas.Add(ListItemsPE1);
+            ListItemsPE2 = new NativeListItem<string>("RPG", "Altera o modo dos gatilhos da RPG", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuPesadas.Add(ListItemsPE2);
+            ListItemsPE3 = new NativeListItem<string>("Lança-granada", "Altera o modo dos gatilhos do Lança-granada", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuPesadas.Add(ListItemsPE3);
+            ListItemsPE4 = new NativeListItem<string>("Lança-granada Comp.", "Altera o modo dos gatilhos do Lança-granada Compacto", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuPesadas.Add(ListItemsPE4);
+            ListItemsPE5 = new NativeListItem<string>("Lança-mísseis Tel.", "Altera o modo dos gatilhos do Lança-mísseis Teleguiado", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuPesadas.Add(ListItemsPE5);
+            ListItemsPE6 = new NativeListItem<string>("Canhão-elétrico", "Altera o modo dos gatilhos do Canhão-elétrico (Railgun)", "Gatilho com recuo", "Gatilho sem recuo");
+            subMenuPesadas.Add(ListItemsPE6);
+            pool.Add(subMenuPesadas);
+
+            subMenuLeds = new NativeMenu("Cores Touchpad", "Cores do Touchpad do Controle");
+            ListItemsLED1 = new NativeListItem<string>("Cores dos personagens", "Altera o modo dos LEDs de acordo com a cor do personagem que está sendo jogado", "Ativo", "Desativado");
+            subMenuLeds.Add(ListItemsLED1);
+            ListItemsLED2 = new NativeListItem<string>("Fugindo da polícia", "Altera o modo dos LEDs caso você esteja fugindo da polícia", "Ativo", "Desativado");
+            subMenuLeds.Add(ListItemsLED2);
+            ListItemsLED3 = new NativeListItem<string>("Utilizar minhas cores", "Altera o modo dos LEDs para o seu perfil pré-definido do DualSenseX (isso acaba ignorando todas as configurações acima)", "Desativado", "Ativado");
+            subMenuLeds.Add(ListItemsLED3);
+            menu.AddSubMenu(subMenuLeds);
+            pool.Add(subMenuLeds);
+
+            subMenuVeiculos = new NativeMenu("Veículos", "Ajustes dos veículos");
+            subMenuGatilhos.AddSubMenu(subMenuVeiculos);
+            ListItemsV1 = new NativeListItem<string>("Gatilhos no Veículo", "Altera o modo dos gatilhos nos veículos", "Ativado", "Desativado");
+            subMenuVeiculos.Add(ListItemsV1);
+            pool.Add(subMenuVeiculos);
+        }
+
+        #endregion
+
+        #region Menu event functions
 
         private void ListItemsV1_ItemChanged(object sender, ItemChangedEventArgs<string> e)
         {
@@ -1851,6 +1816,83 @@ namespace DualSenseV
         private void SubMenuSMG_SelectedIndexChanged(object sender, SelectedEventArgs e)
         {
             GTA.UI.Screen.ShowSubtitle("");
+        }
+
+        #endregion
+
+        #region Static functions
+
+        private static Dictionary<WeaponHash, Tuple<Action>> weaponMappings = new Dictionary<WeaponHash, Tuple<Action>>
+        {        
+            // Pistols
+            { WeaponHash.Pistol, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoPistolaClassica, 3, 0, 10))) },
+            { WeaponHash.CombatPistol, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoCombatPistol, 3, 0, 10))) },
+            { WeaponHash.Pistol50, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoPistol50, 2, 0, 10))) },
+            { WeaponHash.SNSPistol, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoSNSPistol, 3, 0, 10))) },
+            { WeaponHash.HeavyPistol, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoHeavyPistol, 2, 0, 10))) },
+            { WeaponHash.VintagePistol, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoVintagePistol, 2, 0, 10))) },
+            { WeaponHash.MarksmanPistol, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoMarksmanPistol, 1, 1, 10))) },
+            { WeaponHash.Revolver, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(false, 0, 1, 10))) },
+            { WeaponHash.APPistol, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoPistolAP, 8, 0, 10))) },
+            { WeaponHash.StunGun, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoStunGun, 1, 0, 10))) },
+
+            // SMGs
+            { WeaponHash.MicroSMG, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoMicroSMG, 10, 0, 10))) },
+            { WeaponHash.MachinePistol, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoMachinePistol, 9, 0, 10))) },
+            { WeaponHash.MiniSMG, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoMiniSMG, 10, 0, 10))) },
+            { WeaponHash.SMG, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoSMG, 10, 0, 10))) },
+            { WeaponHash.AssaultSMG, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoAssaltSMG, 10, 0, 10))) },
+            { WeaponHash.CombatPDW, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoCombatPDW, 8, 0, 10))) },
+            { WeaponHash.MG, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoMG, 7, 0, 10))) },
+            { WeaponHash.CombatMG, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoCombatMG, 8, 0, 10))) },
+            { WeaponHash.Gusenberg, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoGusenberg, 10, 0, 10))) },
+
+            // Rifles
+            { WeaponHash.CarbineRifle, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoCarbineRifle, 9, 0, 10))) },
+            { WeaponHash.AssaultRifle, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoAssaultRifle, 9, 0, 10))) },
+            { WeaponHash.BullpupRifle, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoBullpupRifle, 9, 0, 10))) },
+            { WeaponHash.AdvancedRifle, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoAdvancedRifle, 9, 0, 10))) },
+            { WeaponHash.CompactRifle, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoCompactRifle, 8, 0, 10))) },
+            { WeaponHash.SpecialCarbine, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoSpecialCarbine, 10, 0, 10))) },
+
+            // Snipers
+            { WeaponHash.SniperRifle, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoSniperRifle, 1, 0, 10))) },
+            { WeaponHash.HeavySniper, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoHeavySniper, 1, 0, 10))) },
+            { WeaponHash.MarksmanRifle, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoMarksmanRifle, 3, 0, 20))) },
+
+            // Shotguns
+            { WeaponHash.PumpShotgun, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoPumpShotgun, 1, 0, 10))) },
+            { WeaponHash.SawnOffShotgun, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoOffShotgun, 1, 0, 10))) },
+            { WeaponHash.BullpupShotgun, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoBShotgun, 1, 0, 10))) },
+            { WeaponHash.AssaultShotgun, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoAssaltShotgun, 4, 0, 20))) },
+            { WeaponHash.Musket, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoMusket, 1, 0, 10))) },
+            { WeaponHash.HeavyShotgun, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoHeavyShotgun, 4, 0, 20))) },
+            { WeaponHash.DoubleBarrelShotgun, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoDBShotgun, 5, 0, 10))) },
+            { WeaponHash.SweeperShotgun, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoSweeperShotgun, 3, 0, 20))) },
+
+            // Heavy
+            { WeaponHash.Minigun, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoMinigun, 17, 0, 25))) },
+            { WeaponHash.RPG, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoRPG, 1, 0, 10))) },
+            { WeaponHash.GrenadeLauncher, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoLG, 1, 0, 10))) },
+            { WeaponHash.CompactGrenadeLauncher, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoLGC, 1, 0, 10))) },
+            { WeaponHash.HomingLauncher, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoLMT, 1, 0, 10))) },
+            { WeaponHash.Railgun, Tuple.Create(new Action(() => Instance.ActivateWeaponTriggers(Instance.controlGatilhoRailgun, 1, 0, 10))) },
+        };
+
+        static void Connect()
+        {
+            client = new UdpClient();
+            var portNumber = File.ReadAllText(@"C:\Program Files (x86)\Steam\steamapps\common\DSX\DualSenseX_PortNumber.txt");
+            endPoint = new IPEndPoint(Triggers.localhost, Convert.ToInt32(portNumber));
+        }
+
+        static void Send(Packet data)
+        {
+            bk = data;
+            tickCounter = 0;
+
+            var RequestData = Encoding.ASCII.GetBytes(Triggers.PacketToJson(data));
+            client.Send(RequestData, RequestData.Length, endPoint);
         }
 
         #endregion
