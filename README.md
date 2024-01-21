@@ -1,4 +1,4 @@
-## Dual Sense V
+# DualSense V
 
 This is a script based on <a href="https://github.com/scripthookvdotnet/scripthookvdotnet">ScriptHookVDotNet</a> and <a href="https://store.steampowered.com/app/1812620/DSX/">DSX</a> that adds the dualsense trigger functions in gta v, it also controls the lights, like the color of the character you are using or when you are running away from the police, everything is configurable, just Press the F10 key to open the settings menu.
 
