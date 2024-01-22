@@ -8,6 +8,9 @@ using System.Net.Sockets;
 using LemonUI;
 using LemonUI.Menus;
 using System.Collections.Generic;
+using System.Reflection;
+using Newtonsoft.Json;
+using System.Linq;
 
 
 namespace DualSenseV
@@ -17,6 +20,13 @@ namespace DualSenseV
         #region Variables
 
         public static DualSense Instance;
+
+        public Localization localization = new Localization();
+
+        Keys key;
+
+        public string KeySettings;
+        public string Language;
 
         //Pool
         ObjectPool pool;
@@ -200,6 +210,7 @@ namespace DualSenseV
             CosturaUtility.Initialize();
 
             Connect();
+            LoadLocalization();
             LoadUI();
 
             // Events
@@ -340,7 +351,7 @@ namespace DualSenseV
         {
             // Open config menu
 
-            if (e.KeyCode == Keys.F10)
+            if (e.KeyCode == key)
             {
                 if(!menu.Visible)
                 {
@@ -926,144 +937,199 @@ namespace DualSenseV
         private void LoadUI()
         {
             pool = new ObjectPool();
-            menu = new NativeMenu("DualSenseV", "Escolha uma opção");
+            menu = new NativeMenu(localization.BqnnerTexts[0], localization.DescriptionTexts[0]);
             pool.Add(menu);
 
-            subMenuGatilhos = new NativeMenu("Gatilhos", "Ajustes dos gatilhos");
+            subMenuGatilhos = new NativeMenu(localization.BqnnerTexts[1], localization.DescriptionTexts[1]);
             menu.AddSubMenu(subMenuGatilhos);
             pool.Add(subMenuGatilhos);
 
-            subMenuArmas = new NativeMenu("Armas", "Ajustes das armas");
+            subMenuArmas = new NativeMenu(localization.BqnnerTexts[2], localization.DescriptionTexts[2]);
             subMenuGatilhos.AddSubMenu(subMenuArmas);
             pool.Add(subMenuArmas);
 
             //Lista de pistolas
-            subMenuPistolas = new NativeMenu("Pistolas", "Ajustes das Pistolas");
+            subMenuPistolas = new NativeMenu(localization.BqnnerTexts[3], localization.DescriptionTexts[3]);
             subMenuArmas.AddSubMenu(subMenuPistolas);
-            ListItemsP1 = new NativeListItem<string>("Pistola Clássica", "Altera o modo dos gatilhos da Pistola Clássica", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsP1 = new NativeListItem<string>(localization.BqnnerTexts[4], localization.DescriptionTexts[4], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuPistolas.Add(ListItemsP1);
-            ListItemsP2 = new NativeListItem<string>("Pistola de Comb...", "Altera o modo dos gatilhos da Pistola de Combate", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsP2 = new NativeListItem<string>(localization.BqnnerTexts[5], localization.DescriptionTexts[5], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuPistolas.Add(ListItemsP2);
-            ListItemsP3 = new NativeListItem<string>("Pistola .50", "Altera o modo dos gatilhos da Pistola .50", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsP3 = new NativeListItem<string>(localization.BqnnerTexts[6], localization.DescriptionTexts[6], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuPistolas.Add(ListItemsP3);
-            ListItemsP4 = new NativeListItem<string>("Pistola Fajuta", "Altera o modo dos gatilhos da Pistola Fajuta", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsP4 = new NativeListItem<string>(localization.BqnnerTexts[7], localization.DescriptionTexts[7], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuPistolas.Add(ListItemsP4);
-            ListItemsP5 = new NativeListItem<string>("Pistola Pesada", "Altera o modo dos gatilhos da Pistola Pesada", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsP5 = new NativeListItem<string>(localization.BqnnerTexts[8], localization.DescriptionTexts[8], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuPistolas.Add(ListItemsP5);
-            ListItemsP6 = new NativeListItem<string>("Pistola Vintage", "Altera o modo dos gatilhos da Pistola Vintage", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsP6 = new NativeListItem<string>(localization.BqnnerTexts[9], localization.DescriptionTexts[9], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuPistolas.Add(ListItemsP6);
-            ListItemsP7 = new NativeListItem<string>("Trabuco", "Altera o modo dos gatilhos do Trabuco", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsP7 = new NativeListItem<string>(localization.BqnnerTexts[10], localization.DescriptionTexts[10], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuPistolas.Add(ListItemsP7);
-            ListItemsP8 = new NativeListItem<string>("Pistola AP", "Altera o modo dos gatilhos da Pistola AP", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsP8 = new NativeListItem<string>(localization.BqnnerTexts[11], localization.DescriptionTexts[11], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuPistolas.Add(ListItemsP8);
-            ListItemsP9 = new NativeListItem<string>("Arma de Choque", "Altera o modo dos gatilhos da Arma de Choque (Stungun)", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsP9 = new NativeListItem<string>(localization.BqnnerTexts[12], localization.DescriptionTexts[12], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuPistolas.Add(ListItemsP9);
             pool.Add(subMenuPistolas);
 
             //Listas de SMGs
-            subMenuSMG = new NativeMenu("SMGs", "Ajustes das SMGs");
+            subMenuSMG = new NativeMenu(localization.BqnnerTexts[13], localization.DescriptionTexts[13]);
             subMenuArmas.AddSubMenu(subMenuSMG);
-            ListItemsM1 = new NativeListItem<string>("Micro SMG", "Altera o modo dos gatilhos da Micro SMG", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsM1 = new NativeListItem<string>(localization.BqnnerTexts[14], localization.DescriptionTexts[14], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuSMG.Add(ListItemsM1);
-            ListItemsM2 = new NativeListItem<string>("Pistola Metralh...", "Altera o modo dos gatilhos da Pistola Metralhadora", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsM2 = new NativeListItem<string>(localization.BqnnerTexts[15], localization.DescriptionTexts[15], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuSMG.Add(ListItemsM2);
-            ListItemsM3 = new NativeListItem<string>("Mini SMG", "Altera o modo dos gatilhos da Mini SMG", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsM3 = new NativeListItem<string>(localization.BqnnerTexts[16], localization.DescriptionTexts[16], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuSMG.Add(ListItemsM3);
-            ListItemsM4 = new NativeListItem<string>("Submetralhadora", "Altera o modo dos gatilhos da Submetralhadora", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsM4 = new NativeListItem<string>(localization.BqnnerTexts[17], localization.DescriptionTexts[17], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuSMG.Add(ListItemsM4);
-            ListItemsM5 = new NativeListItem<string>("SMG de Combate", "Altera o modo dos gatilhos da Submetralhadora de Combate", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsM5 = new NativeListItem<string>(localization.BqnnerTexts[18], localization.DescriptionTexts[18], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuSMG.Add(ListItemsM5);
-            ListItemsM6 = new NativeListItem<string>("ADP de Combate", "Altera o modo dos gatilhos da ADP de Combate", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsM6 = new NativeListItem<string>(localization.BqnnerTexts[19], localization.DescriptionTexts[19], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuSMG.Add(ListItemsM6);
-            ListItemsM7 = new NativeListItem<string>("Metralhadora", "Altera o modo dos gatilhos da Metralhadora", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsM7 = new NativeListItem<string>(localization.BqnnerTexts[20], localization.DescriptionTexts[20], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuSMG.Add(ListItemsM7);
-            ListItemsM8 = new NativeListItem<string>("MG de Combate", "Altera o modo dos gatilhos da Metralhadora de Combate", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsM8 = new NativeListItem<string>(localization.BqnnerTexts[21], localization.DescriptionTexts[21], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuSMG.Add(ListItemsM8);
-            ListItemsM9 = new NativeListItem<string>("Metranca", "Altera o modo dos gatilhos da Metranca", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsM9 = new NativeListItem<string>(localization.BqnnerTexts[22], localization.DescriptionTexts[22], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuSMG.Add(ListItemsM9);
             pool.Add(subMenuSMG);
 
             //Listas de rifles
-            subMenuRifles = new NativeMenu("Rifles", "Ajustes dos Rifles");
+            subMenuRifles = new NativeMenu(localization.BqnnerTexts[23], localization.DescriptionTexts[23]);
             subMenuArmas.AddSubMenu(subMenuRifles);
-            ListItemsR1 = new NativeListItem<string>("Carabina", "Altera o modo dos gatilhos da carabina", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsR1 = new NativeListItem<string>(localization.BqnnerTexts[24], localization.DescriptionTexts[24], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuRifles.Add(ListItemsR1);
-            ListItemsR2 = new NativeListItem<string>("Carabina Especial", "Altera o modo dos gatilhos da Carabina Especial", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsR2 = new NativeListItem<string>(localization.BqnnerTexts[25], localization.DescriptionTexts[25], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuRifles.Add(ListItemsR2);
-            ListItemsR3 = new NativeListItem<string>("Fuzil", "Altera o modo dos gatilhos do Fuzil", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsR3 = new NativeListItem<string>(localization.BqnnerTexts[26], localization.DescriptionTexts[26], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuRifles.Add(ListItemsR3);
-            ListItemsR4 = new NativeListItem<string>("Fuzil Compacto", "Altera o modo dos gatilhos do Fuzil Compacto", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsR4 = new NativeListItem<string>(localization.BqnnerTexts[27], localization.DescriptionTexts[27], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuRifles.Add(ListItemsR4);
-            ListItemsR5 = new NativeListItem<string>("Fuzil Bullpup", "Altera o modo dos gatilhos do fuzil Bullpup", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsR5 = new NativeListItem<string>(localization.BqnnerTexts[28], localization.DescriptionTexts[28], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuRifles.Add(ListItemsR5);
-            ListItemsR6 = new NativeListItem<string>("Fuzil Avançado", "Altera o modo dos gatilhos do fuzil Avançado", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsR6 = new NativeListItem<string>(localization.BqnnerTexts[29], localization.DescriptionTexts[29], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuRifles.Add(ListItemsR6);
             pool.Add(subMenuRifles);
 
             //Listas de snipers
-            subMenuSnipers = new NativeMenu("Snipers", "Ajustes das Snipers");
+            subMenuSnipers = new NativeMenu(localization.BqnnerTexts[30], localization.DescriptionTexts[30]);
             subMenuArmas.AddSubMenu(subMenuSnipers);
-            ListItemsS1 = new NativeListItem<string>("Rifle de Precisão", "Altera o modo dos gatilhos do Rifle de Precisão", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsS1 = new NativeListItem<string>(localization.BqnnerTexts[31], localization.DescriptionTexts[31], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuSnipers.Add(ListItemsS1);
-            ListItemsS2 = new NativeListItem<string>("Heavy Sniper", "Altera o modo dos gatilhos do Rifle de Precisão Pesado", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsS2 = new NativeListItem<string>(localization.BqnnerTexts[32], localization.DescriptionTexts[32], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuSnipers.Add(ListItemsS2);
-            ListItemsS3 = new NativeListItem<string>("Rifle de Elite", "Altera o modo dos gatilhos do Rifle de Elite", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsS3 = new NativeListItem<string>(localization.BqnnerTexts[33], localization.DescriptionTexts[33], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuSnipers.Add(ListItemsS3);
             pool.Add(subMenuSnipers);
 
             //Lista de escopetas
-            subMenuEscopetas = new NativeMenu("Escopetas", "Ajustes das Escopetas");
+            subMenuEscopetas = new NativeMenu(localization.BqnnerTexts[34], localization.DescriptionTexts[34]);
             subMenuArmas.AddSubMenu(subMenuEscopetas);
-            ListItemsE1 = new NativeListItem<string>("Escopeta", "Altera o modo dos gatilhos da Escopeta", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsE1 = new NativeListItem<string>(localization.BqnnerTexts[35], localization.DescriptionTexts[35], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuEscopetas.Add(ListItemsE1);
-            ListItemsE2 = new NativeListItem<string>("Escopeta Serrada", "Altera o modo dos gatilhos da Escopeta de Cano Serrado", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsE2 = new NativeListItem<string>(localization.BqnnerTexts[36], localization.DescriptionTexts[36], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuEscopetas.Add(ListItemsE2);
-            ListItemsE3 = new NativeListItem<string>("Escopeta Bullpup", "Altera o modo dos gatilhos da Escopeta Bullpup", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsE3 = new NativeListItem<string>(localization.BqnnerTexts[37], localization.DescriptionTexts[37], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuEscopetas.Add(ListItemsE3);
-            ListItemsE4 = new NativeListItem<string>("Escopeta de Comb...", "Altera o modo dos gatilhos da Escopeta de Combate", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsE4 = new NativeListItem<string>(localization.BqnnerTexts[38], localization.DescriptionTexts[38], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuEscopetas.Add(ListItemsE4);
-            ListItemsE5 = new NativeListItem<string>("Mosquete", "Altera o modo dos gatilhos do Mosquete", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsE5 = new NativeListItem<string>(localization.BqnnerTexts[39], localization.DescriptionTexts[39], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuEscopetas.Add(ListItemsE5);
-            ListItemsE6 = new NativeListItem<string>("Escopeta Pesada", "Altera o modo dos gatilhos da Escopeta Pesada", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsE6 = new NativeListItem<string>(localization.BqnnerTexts[40], localization.DescriptionTexts[40], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuEscopetas.Add(ListItemsE6);
-            ListItemsE7 = new NativeListItem<string>("Escopeta C. Duplo", "Altera o modo dos gatilhos da Escopeta Cano Duplo", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsE7 = new NativeListItem<string>(localization.BqnnerTexts[41], localization.DescriptionTexts[41], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuEscopetas.Add(ListItemsE7);
-            ListItemsE8 = new NativeListItem<string>("Escopeta Automática", "Altera o modo dos gatilhos da Escopeta Automática", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsE8 = new NativeListItem<string>(localization.BqnnerTexts[42], localization.DescriptionTexts[42], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuEscopetas.Add(ListItemsE8);
             pool.Add(subMenuEscopetas);
 
             //Lista de armas pesadas
-            subMenuPesadas = new NativeMenu("Armas Pesadas", "Ajustes das Armas Pesadas");
+            subMenuPesadas = new NativeMenu(localization.BqnnerTexts[43], localization.DescriptionTexts[43]);
             subMenuArmas.AddSubMenu(subMenuPesadas);
-            ListItemsPE1 = new NativeListItem<string>("Minigun", "Altera o modo dos gatilhos da Minigun", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsPE1 = new NativeListItem<string>(localization.BqnnerTexts[44], localization.DescriptionTexts[44], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuPesadas.Add(ListItemsPE1);
-            ListItemsPE2 = new NativeListItem<string>("RPG", "Altera o modo dos gatilhos da RPG", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsPE2 = new NativeListItem<string>(localization.BqnnerTexts[45], localization.DescriptionTexts[45], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuPesadas.Add(ListItemsPE2);
-            ListItemsPE3 = new NativeListItem<string>("Lança-granada", "Altera o modo dos gatilhos do Lança-granada", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsPE3 = new NativeListItem<string>(localization.BqnnerTexts[46], localization.DescriptionTexts[46], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuPesadas.Add(ListItemsPE3);
-            ListItemsPE4 = new NativeListItem<string>("Lança-granada Comp.", "Altera o modo dos gatilhos do Lança-granada Compacto", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsPE4 = new NativeListItem<string>(localization.BqnnerTexts[47], localization.DescriptionTexts[47], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuPesadas.Add(ListItemsPE4);
-            ListItemsPE5 = new NativeListItem<string>("Lança-mísseis Tel.", "Altera o modo dos gatilhos do Lança-mísseis Teleguiado", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsPE5 = new NativeListItem<string>(localization.BqnnerTexts[48], localization.DescriptionTexts[48], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuPesadas.Add(ListItemsPE5);
-            ListItemsPE6 = new NativeListItem<string>("Canhão-elétrico", "Altera o modo dos gatilhos do Canhão-elétrico (Railgun)", "Gatilho com recuo", "Gatilho sem recuo");
+            ListItemsPE6 = new NativeListItem<string>(localization.BqnnerTexts[49], localization.DescriptionTexts[49], localization.RecoilTriggerText, localization.RecoillessTriggerText);
             subMenuPesadas.Add(ListItemsPE6);
             pool.Add(subMenuPesadas);
 
-            subMenuLeds = new NativeMenu("Cores Touchpad", "Cores do Touchpad do Controle");
-            ListItemsLED1 = new NativeListItem<string>("Cores dos personagens", "Altera o modo dos LEDs de acordo com a cor do personagem que está sendo jogado", "Ativo", "Desativado");
+            subMenuLeds = new NativeMenu(localization.BqnnerTexts[50], localization.DescriptionTexts[50]);
+            ListItemsLED1 = new NativeListItem<string>(localization.BqnnerTexts[51], localization.DescriptionTexts[51], localization.ActiveText, localization.DisabledText);
             subMenuLeds.Add(ListItemsLED1);
-            ListItemsLED2 = new NativeListItem<string>("Fugindo da polícia", "Altera o modo dos LEDs caso você esteja fugindo da polícia", "Ativo", "Desativado");
+            ListItemsLED2 = new NativeListItem<string>(localization.BqnnerTexts[52], localization.DescriptionTexts[52], localization.ActiveText, localization.DisabledText);
             subMenuLeds.Add(ListItemsLED2);
-            ListItemsLED3 = new NativeListItem<string>("Utilizar minhas cores", "Altera o modo dos LEDs para o seu perfil pré-definido do DualSenseX (isso acaba ignorando todas as configurações acima)", "Desativado", "Ativado");
+            ListItemsLED3 = new NativeListItem<string>(localization.BqnnerTexts[53], localization.DescriptionTexts[53], localization.DisabledText, localization.ActiveText);
             subMenuLeds.Add(ListItemsLED3);
             menu.AddSubMenu(subMenuLeds);
             pool.Add(subMenuLeds);
 
-            subMenuVeiculos = new NativeMenu("Veículos", "Ajustes dos veículos");
+            subMenuVeiculos = new NativeMenu(localization.BqnnerTexts[54], localization.DescriptionTexts[54]);
             subMenuGatilhos.AddSubMenu(subMenuVeiculos);
-            ListItemsV1 = new NativeListItem<string>("Gatilhos no Veículo", "Altera o modo dos gatilhos nos veículos", "Ativado", "Desativado");
+            ListItemsV1 = new NativeListItem<string>(localization.BqnnerTexts[55], localization.DescriptionTexts[55], localization.ActiveText, localization.DisabledText);
             subMenuVeiculos.Add(ListItemsV1);
             pool.Add(subMenuVeiculos);
+        }
+
+        private void LoadLocalization()
+        {
+            if (!File.Exists(AppDomain.CurrentDomain.BaseDirectory + $"/DSV.config"))
+            {
+                using (StreamWriter writer = new StreamWriter(AppDomain.CurrentDomain.BaseDirectory + $"/DSV.config"))
+                {
+                    writer.WriteLine("# DualSense V Settings File");
+                    writer.WriteLine("# Default key for open settings: F10");
+                    writer.WriteLine("# Languages: EN, PTBR");
+                    writer.WriteLine("KeySettings=F10");
+                    writer.WriteLine("Language=EN");
+                }
+            }
+
+            var data = new Dictionary<string, string>();
+
+            foreach (var row in File.ReadAllLines(AppDomain.CurrentDomain.BaseDirectory + $"/DSV.config"))
+            {
+                if (row.Contains("#")) continue;
+
+                data.Add(row.Split('=')[0], string.Join("=", row.Split('=').Skip(1).ToArray()));
+            }
+
+            foreach(var value in data)
+            {
+                if(value.Key == "KeySettings")
+                    KeySettings = value.Value;
+                else if (value.Key == "Language")
+                    Language = value.Value;
+            }
+
+            Enum.TryParse(KeySettings, out key);
+            if(key.ToString() == "None") key = Keys.F10;
+
+            if (!File.Exists(AppDomain.CurrentDomain.BaseDirectory + $"/{nameof(localization)}.json"))
+            {
+                localization.CreateJsonFile();
+            }
+
+            string localizationString = File.ReadAllText(AppDomain.CurrentDomain.BaseDirectory + $"/{nameof(localization)}.json");
+
+            List<Localization> localizationList = new List<Localization>();
+
+            localizationList = JsonConvert.DeserializeObject<List<Localization>>(localizationString, new JsonSerializerSettings()
+            {
+                ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
+                PreserveReferencesHandling = PreserveReferencesHandling.Objects
+            });
+
+            if(Language == "PTBR")
+                localization = localizationList[1];
+            else
+                localization = localizationList[0];
         }
 
         #endregion
